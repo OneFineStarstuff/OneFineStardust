@@ -1,0 +1,5 @@
+dashboard:
+  enabled: true
+  service: Codefair
+  version: 1.0
+  description: Initial configuration for FAIR Compliance Dashboard
