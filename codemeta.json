@@ -1,0 +1,26 @@
+{
+  "name": "OneFineStardust",
+  "@context": "https://w3id.org/codemeta/3.0",
+  "author": [
+    {
+      "familyName": "𝐒𝐭𝐚𝐫𝐬𝐭𝐮𝐟𝐟",
+      "id": "_:author_1",
+      "givenName": "𝐎𝐧𝐞",
+      "type": "Person"
+    }
+  ],
+  "codeRepository": "https://github.com/OneFineStarstuff/OneFineStardust",
+  "dateCreated": "2021-07-14",
+  "description": "Config files for my GitHub profile.",
+  "issueTracker": "https://github.com/OneFineStarstuff/OneFineStardust/issues",
+  "keywords": [
+    "config",
+    "github-config"
+  ],
+  "license": "https://spdx.org/licenses/MIT",
+  "programmingLanguage": [
+    "Jupyter Notebook",
+    "Python"
+  ],
+  "type": "SoftwareSourceCode"
+}
