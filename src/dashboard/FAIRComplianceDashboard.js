@@ -2,6 +2,7 @@ import React from 'react';
 import { checkLicenseFile } from '../utils/licenseCheck';
 
 const FAIRComplianceDashboard = () => {
+  const [userMetrics, setUserMetrics] = React.useState([]);
   const licenseStatus = checkLicenseFile();
   return (
     <div className="fair-compliance-dashboard">
@@ -19,6 +20,9 @@ const FAIRComplianceDashboard = () => {
       <div className="compliance-section">
         <h3>FAIR Software Release Process</h3>
         <p>Status: <span className="status-badge">Unknown</span></p>
+      </div>
+      <div className="compliance-section">
+        <h3>Custom Metrics</h3>
       </div>
     </div>
   );
