@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<eaip:EnterpriseAIProtocol
+  xmlns:eaip="urn:eaip:schema:v2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="urn:eaip:schema:v2 eaip-spec-v2.xsd"
+  specVersion="2.5.0"
+  status="FINALIZED">
+
+  <eaip:DocumentMeta>
+    <eaip:Identifier format="URN">urn:eaip:spec:2.5.0:2026-03-18</eaip:Identifier>
+    <eaip:Title lang="en">Enterprise AI Agent Interoperability Protocol (EAIP) — Technical Specification</eaip:Title>
+    <eaip:ShortName>EAIP</eaip:ShortName>
+    <eaip:Abstract>
+      This specification defines the mandatory transport, identity, state-management,
+      governance, and auditing requirements for secure, stateful, and auditable
+      communication between heterogeneous AI agents across enterprise boundaries.
+      It mandates gRPC transport, SPIFFE/SPIRE identity, RCE state persistence,
+      OPA-based policy enforcement, and Kafka WORM-based audit logging.
+    </eaip:Abstract>
+    <eaip:StandardizationNecessity>
+      Standardization is critical for ensuring interoperability between diverse AI agents,
+      maintaining security through zero-trust identities, and enabling auditable,
+      reproducible decision-making pipelines in complex enterprise environments.
+    </eaip:StandardizationNecessity>
+  </eaip:DocumentMeta>
+
+  <eaip:TransportLayer>
+    <eaip:Protocol mandated="true" version="HTTP/2">
+      <eaip:Name>gRPC</eaip:Name>
+      <eaip:Rationale>
+        gRPC provides binary efficiency, native streaming support, and schema-first
+        contracts necessary for agentic workflows. REST and WebSockets are explicitly
+        prohibited for intra-mesh communication to minimize latency and ensure consistency.
+      </eaip:Rationale>
+    </eaip:Protocol>
+    <eaip:TLS version="1.3" mutual="true">
+      <eaip:CertificateSource>SPIFFE_SVID</eaip:CertificateSource>
+      <eaip:CipherSuites>
+        <eaip:Suite id="TLS_AES_256_GCM_SHA384" preferred="true"/>
+        <eaip:Suite id="TLS_CHACHA20_POLY1305_SHA256" preferred="true"/>
+      </eaip:CipherSuites>
+    </eaip:TLS>
+  </eaip:TransportLayer>
+
+  <eaip:IdentityLayer>
+    <eaip:Framework name="SPIFFE" version="1.0">
+      <eaip:TrustDomain>eaip.example.org</eaip:TrustDomain>
+    </eaip:Framework>
+    <eaip:SVIDPolicy>
+      <eaip:Type>X509-SVID</eaip:Type>
+      <eaip:MaxTTL unit="hours">24</eaip:MaxTTL>
+      <eaip:RotationLeadTime unit="hours">1</eaip:RotationLeadTime>
+    </eaip:SVIDPolicy>
+    <eaip:IAMArchitecture>
+      Leverages SPIRE (SPIFFE Runtime Environment) for automated identity issuance
+      and mTLS-based authentication between autonomous agents.
+    </eaip:IAMArchitecture>
+  </eaip:IdentityLayer>
+
+  <eaip:GovernanceLayer>
+    <eaip:PolicyEnforcement mandated="true">
+      <eaip:Engine>Open Policy Agent (OPA)</eaip:Engine>
+      <eaip:Mode>Sidecar / Decoupled</eaip:Mode>
+      <eaip:Description>
+        Every agent request MUST be validated against a Rego-based policy prior to
+        execution. Policies are dynamically updated via a central control plane.
+      </eaip:Description>
+    </eaip:PolicyEnforcement>
+    <eaip:ComplianceAsCode>
+      Mandates that all agent behavioral constraints are expressed as version-controlled
+      code and enforced at the protocol level.
+    </eaip:ComplianceAsCode>
+  </eaip:GovernanceLayer>
+
+  <eaip:AuditingLayer>
+    <eaip:AuditPersistence mandated="true">
+      <eaip:Technology>Kafka WORM (Write Once Read Many)</eaip:Technology>
+      <eaip:RetentionPeriod unit="years">7</eaip:RetentionPeriod>
+      <eaip:Description>
+        All EAIP-compliant agents MUST emit a trace event for every request/response cycle
+        to an immutable Kafka topic. This ensures a "memory trace map" for forensic
+        and governance purposes.
+      </eaip:Description>
+    </eaip:AuditPersistence>
+  </eaip:AuditingLayer>
+
+  <eaip:StateManagement>
+    <eaip:RecursiveContextEnvelope version="2">
+      <eaip:NestingRules maxDepth="4"/>
+      <eaip:StateFields>
+        <eaip:Field name="conversationId" required="true"/>
+        <eaip:Field name="tokenBudget" required="true"/>
+        <eaip:Field name="frames" type="repeated ContextFrame"/>
+      </eaip:StateFields>
+    </eaip:RecursiveContextEnvelope>
+  </eaip:StateManagement>
+
+  <eaip:SequenceDiagram format="mermaid">
+    <![CDATA[
+sequenceDiagram
+  %% EAIP v2.5.0 — Full request lifecycle with Governance & Auditing
+  participant Client   as Client Service
+  participant Gateway  as Inference Gateway
+  participant SPIRE    as SPIRE Agent
+  participant OPA      as OPA Policyd
+  participant Kafka    as Kafka WORM Audit
+
+  rect rgb(245, 245, 240)
+    Note over Client,SPIRE: §2 Identity — SVID Acquisition
+    Client->>SPIRE: FetchX509SVID()
+    SPIRE-->>Client: X509-SVID
+    Gateway->>SPIRE: FetchX509SVID()
+    SPIRE-->>Gateway: X509-SVID
+  end
+
+  rect rgb(240, 245, 245)
+    Note over Client,Gateway: §1 Transport — gRPC/mTLS Channel
+    Client->>Gateway: TLS 1.3 ClientHello (SPIFFE SVID)
+    Gateway-->>Client: TLS 1.3 ServerHello
+  end
+
+  rect rgb(245, 240, 245)
+    Note over Client,OPA: §4 Governance — Policy Check
+    Client->>OPA: CheckPolicy(spiffeId=client, action=request)
+    OPA-->>Client: PolicyDecision { allow: true }
+  end
+
+  Note over Client,Kafka: §5 Auditing — Initial Trace
+  Client->>Kafka: EmitEvent(RCE_header, status=PENDING)
+
+  Note over Client,Gateway: §3 RCE — Request Execution
+  Client->>Gateway: InferenceRequest(rce=RCE_depth0)
+  activate Gateway
+  Gateway->>Kafka: EmitEvent(RCE_header, status=PROCESSING)
+  Gateway-->>Client: InferenceResponse(rce=RCE_depth0_updated)
+  deactivate Gateway
+
+  Note over Client,Kafka: §5 Auditing — Final Trace
+  Client->>Kafka: EmitEvent(RCE_header, status=COMPLETED)
+    ]]>
+  </eaip:SequenceDiagram>
+
+  <eaip:ErrorRegistry>
+    <eaip:Error code="EAIP-1001" grpcStatus="UNAUTHENTICATED">
+      <eaip:Description>SVID missing or expired.</eaip:Description>
+    </eaip:Error>
+    <eaip:Error code="EAIP-2001" grpcStatus="INVALID_ARGUMENT">
+      <eaip:Description>RCE nesting depth exceeds maximum (4).</eaip:Description>
+    </eaip:Error>
+    <eaip:Error code="EAIP-4001" grpcStatus="PERMISSION_DENIED">
+      <eaip:Description>OPA policy rejection.</eaip:Description>
+    </eaip:Error>
+  </eaip:ErrorRegistry>
+
+  <eaip:Conformance>
+    <eaip:Requirement id="C-T-01" rfc2119="MUST">All communication uses gRPC.</eaip:Requirement>
+    <eaip:Requirement id="C-I-01" rfc2119="MUST">SVIDs rotated before TTL expiry.</eaip:Requirement>
+    <eaip:Requirement id="C-G-01" rfc2119="MUST">All requests validated by OPA.</eaip:Requirement>
+    <eaip:Requirement id="C-A-01" rfc2119="MUST">All events logged to Kafka WORM.</eaip:Requirement>
+  </eaip:Conformance>
+
+  <eaip:Ownership>
+    <eaip:Committee>EAIP Technical Standards Committee</eaip:Committee>
+    <eaip:License spdx="Apache-2.0"/>
+  </eaip:Ownership>
+
+</eaip:EnterpriseAIProtocol>
