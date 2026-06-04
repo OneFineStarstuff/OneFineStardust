@@ -1,13 +1,16 @@
-title: OneFineStardust
-authors:
-  - given-names: 𝐎𝐧𝐞
-    family-names: 𝐒𝐭𝐚𝐫𝐬𝐭𝐮𝐟𝐟
 cff-version: 1.2.0
-message: If you use this software, please cite it using the metadata from this file.
-type: software
-abstract: Config files for my GitHub profile.
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Starstuff"
+  given-names: "One Fine"
+title: "OneFineStardust: AGI Research and Governance Framework"
+version: 2.5.0
+date-released: 2024-05-20
+url: "https://github.com/OneFineStarstuff/OneFineStardust"
 keywords:
-  - config
-  - github-config
+  - AGI
+  - ML
+  - Governance
+  - EAIP
+  - FAIR
 license: MIT
-repository-code: https://github.com/OneFineStarstuff/OneFineStardust

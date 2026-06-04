@@ -1,0 +1,19 @@
+{
+    "title": "OneFineStardust: AGI Research and Governance Framework",
+    "description": "A research-driven repository focusing on Artificial General Intelligence (AGI), Machine Learning, and the Enterprise AI Agent Interoperability Protocol (EAIP) v2.5.0.",
+    "creators": [
+        {
+            "name": "One Fine Starstuff"
+        }
+    ],
+    "keywords": [
+        "AGI",
+        "Machine Learning",
+        "Governance",
+        "EAIP",
+        "FAIR Compliance"
+    ],
+    "access_right": "open",
+    "license": "MIT",
+    "version": "2.5.0"
+}
