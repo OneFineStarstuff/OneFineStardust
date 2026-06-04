@@ -3,24 +3,28 @@
   "@context": "https://w3id.org/codemeta/3.0",
   "author": [
     {
-      "familyName": "𝐒𝐭𝐚𝐫𝐬𝐭𝐮𝐟𝐟",
-      "id": "_:author_1",
-      "givenName": "𝐎𝐧𝐞",
+      "familyName": "Starstuff",
+      "givenName": "One Fine",
       "type": "Person"
     }
   ],
   "codeRepository": "https://github.com/OneFineStarstuff/OneFineStardust",
   "dateCreated": "2021-07-14",
-  "description": "Config files for my GitHub profile.",
+  "description": "AGI Research and Governance Framework incorporating the EAIP v2.5.0 protocol and G-SIFI governance models.",
   "issueTracker": "https://github.com/OneFineStarstuff/OneFineStardust/issues",
   "keywords": [
-    "config",
-    "github-config"
+    "AGI",
+    "ML",
+    "Governance",
+    "EAIP",
+    "FAIR"
   ],
   "license": "https://spdx.org/licenses/MIT",
   "programmingLanguage": [
     "Jupyter Notebook",
-    "Python"
+    "Python",
+    "JavaScript"
   ],
+  "version": "2.5.0",
   "type": "SoftwareSourceCode"
 }
