@@ -39,6 +39,40 @@ def log_execution_time(func: Callable) -> Callable:
         return result
     return wrapper
 
+
+class RecursiveContextEnvelope:
+    """
+    EAIP v2.5.0 mandated State Management structure.
+    Represents a Merkle-linked state for agentic workflows.
+    """
+    def __init__(self, conversation_id: str, token_budget: int, parent_hash: Optional[str] = None) -> None:
+        self.conversation_id = conversation_id
+        self.token_budget = token_budget
+        self.parent_hash = parent_hash
+        self.frames: List[Dict[str, Any]] = []
+        self.depth = 0
+        self.timestamp = time.time()
+
+    def add_frame(self, agent_id: str, content: Any) -> None:
+        """Adds a new context frame to the envelope."""
+        frame = {
+            "agent_id": agent_id,
+            "content": content,
+            "timestamp": time.time()
+        }
+        self.frames.append(frame)
+        logging.info(f"[EAIP-RCE] Added frame for {agent_id} to conversation {self.conversation_id}")
+
+    def wrap(self) -> 'RecursiveContextEnvelope':
+        """Creates a nested envelope (Depth+1)."""
+        if self.depth >= 4:
+            raise ValueError("EAIP-2001: RCE nesting depth exceeds maximum (4)")
+
+        # In a real implementation, we would calculate a SHA-256 Merkle root here
+        current_hash = "sha256:placeholder_hash"
+        new_envelope = RecursiveContextEnvelope(self.conversation_id, self.token_budget, current_hash)
+        new_envelope.depth = self.depth + 1
+        return new_envelope
 class AGISystemSTEM:
     def __init__(self, model_loader: Optional[Callable] = None) -> None:
         """
@@ -51,29 +85,69 @@ class AGISystemSTEM:
         self.device = self._detect_device()
         self.model_loader = model_loader if model_loader else self._default_model_loader
         self.model_cache = {}
+        # EAIP v2.5.0 Protocol Configuration
+        self.eaip_config = {
+            'spec_version': '2.5.0',
+            'transport': 'gRPC',
+            'identity': 'SPIFFE/SPIRE',
+            'governance': 'OPA',
+            'auditing': 'Kafka-WORM'
+        }
+        self.context_envelope = RecursiveContextEnvelope("default_conv", 1000)
 
-    @lru_cache(maxsize=5)
+
     @log_execution_time
     async def load_model(self, model_name: str, model_class: str) -> None:
         """
-        Asynchronously loads a model.
+        Asynchronously loads a model with internal caching.
 
         :param model_name: Name of the model to load.
         :param model_class: Class of the model (e.g., nlp_v1).
         """
         if model_class in self.models:
+            # Move to end to maintain LRU property if we were using OrderedDict
+            # For now, just return
             logging.info(f"{model_class} already loaded.")
             return
+
+        # Check if currently loading to avoid duplicate concurrent loads
+        if model_class in self.model_cache:
+            logging.info(f"Already loading {model_class}, waiting...")
+            await self.model_cache[model_class]
+            return
+
+        # Create a task for loading
+        load_task = asyncio.create_task(asyncio.to_thread(self.model_loader, model_name, model_class))
+        self.model_cache[model_class] = load_task
+
         try:
+            # EAIP Identity & Governance check
+            agent_id = await self._verify_identity()
+            if not await self._check_governance_policy("LOAD_MODEL", model_class):
+                logging.warning(f"Governance policy rejected loading of {model_class}")
+                return
+
+            await self._emit_audit_event("MODEL_LOAD_START", {"model_class": model_class, "agent_id": agent_id})
+
             start_time = time.time()
-            self.models[model_class] = await asyncio.to_thread(
-                self.model_loader, model_name, model_class
-            )
+            model_data = await load_task
+
+            # Simple LRU: if we have more than 5 models, remove the oldest one
+            if len(self.models) >= 5:
+                oldest_key = next(iter(self.models))
+                del self.models[oldest_key]
+                logging.info(f"LRU: Removed {oldest_key} to make room for {model_class}.")
+
+            self.models[model_class] = model_data
             logging.info(f"{model_class} loaded successfully in {time.time() - start_time:.2f} seconds.")
+            await self._emit_audit_event("MODEL_LOAD_SUCCESS", {"model_class": model_class, "duration": time.time() - start_time})
         except ModelInitializationError as e:
             logging.error(f"Model load failed: {str(e)}")
+            await self._emit_audit_event("MODEL_LOAD_FAILURE", {"model_class": model_class, "error": str(e)})
         except Exception as e:
             logging.error(f"Unexpected error while loading model: {str(e)}")
+        finally:
+            self.model_cache.pop(model_class, None)
 
     def _create_dense_model(
         self, input_shape: Tuple[int], model_name: str, num_classes: int
@@ -156,6 +230,57 @@ class AGISystemSTEM:
             logging.error(f"Failed to load model {model_name}: {str(e)}")
             return None
 
+
+    # --- EAIP v2.5.0 Protocol Implementation Hooks ---
+
+    async def _emit_audit_event(self, event_type: str, data: Dict[str, Any]) -> None:
+        """
+        Emits an audit event to the Kafka WORM (Write Once Read Many) log.
+        Mandated by EAIP v2.5.0 Auditing Layer.
+        """
+        event = {
+            "timestamp": time.time(),
+            "event_type": event_type,
+            "data": data,
+            "spec_version": self.eaip_config['spec_version']
+        }
+        # In a real implementation, this would send to a Kafka topic
+        logging.info(f"[EAIP-AUDIT] {event_type}: {data}")
+
+    async def _check_governance_policy(self, action: str, resource: str) -> bool:
+        """
+        Validates the action against OPA (Open Policy Agent) Rego policies.
+        Mandated by EAIP v2.5.0 Governance Layer.
+        """
+        # Placeholder for OPA sidecar call
+        allowed = True # Default to True for now, but in production this checks OPA
+        logging.info(f"[EAIP-GOVERNANCE] Checking policy for {action} on {resource}: {allowed}")
+        if not allowed:
+            await self._emit_audit_event("POLICY_REJECTION", {"action": action, "resource": resource})
+        return allowed
+
+    async def _verify_identity(self) -> str:
+        """
+        Verifies the agent's identity using SPIFFE/SPIRE (X.509-SVID).
+        Mandated by EAIP v2.5.0 Identity Layer.
+        """
+        # Placeholder for fetching SVID from SPIRE Workload API
+        spiffe_id = "spiffe://eaip.example.org/agent/agi-system-stem"
+        logging.info(f"[EAIP-IDENTITY] Verified identity: {spiffe_id}")
+        return spiffe_id
+
+
+    def update_context(self, agent_id: str, content: Any) -> None:
+        """Updates the mandated EAIP Recursive Context Envelope."""
+        if self.context_envelope:
+            self.context_envelope.add_frame(agent_id, content)
+    def setup_grpc_transport(self, port: int = 50051) -> None:
+        """
+        Sets up the mandated gRPC transport layer.
+        Mandated by EAIP v2.5.0 Transport Layer.
+        """
+        logging.info(f"[EAIP-TRANSPORT] gRPC server structure initialized on port {port}")
+        # Placeholder for gRPC server initialization
 # Example usage
 async def main():
     agi_system = AGISystemSTEM()

@@ -1,8 +1,10 @@
 import React from 'react';
 import { checkLicenseFile } from '../utils/licenseCheck';
+import { checkMetadataFiles } from '../utils/metadataCheck';
 
 const FAIRComplianceDashboard = () => {
   const licenseStatus = checkLicenseFile();
+  const { citationStatus, codemetaStatus } = checkMetadataFiles();
   return (
     <div className="fair-compliance-dashboard">
       <h2>FAIR Compliance Dashboard</h2>
@@ -13,7 +15,8 @@ const FAIRComplianceDashboard = () => {
       </div>
       <div className="compliance-section">
         <h3>Metadata Validation</h3>
-        <p>Status: <span className="status-badge">Unknown</span></p>
+        <p>CITATION.cff: <span className="status-badge">{citationStatus}</span></p>
+        <p>codemeta.json: <span className="status-badge">{codemetaStatus}</span></p>
         <button>Update Metadata</button>
       </div>
       <div className="compliance-section">
