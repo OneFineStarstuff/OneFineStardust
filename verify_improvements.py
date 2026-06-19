@@ -2,25 +2,30 @@ import asyncio
 import logging
 import os
 import sys
+import importlib.util
+from importlib.machinery import SourceFileLoader
 
 # Mocking modules that might not be available or too heavy to load for a simple test
 sys.modules['transformers'] = type('module', (), {'AutoModelForCausalLM': None, 'AutoTokenizer': None})
-sys.modules['tensorflow'] = type('module', (), {'keras': type('module', (), {'models': type('module', (), {'Model': object})}), 'config': type('module', (), {'list_physical_devices': lambda x: []})})
+sys.modules['tensorflow'] = type('module', (), {'keras': type('module', (), {'models': type('module', (), {'Model': object})}), 'config': type('module', (), {'list_physical_devices': lambda x: []}), 'errors': type('module', (), {'ResourceExhaustedError': Exception})})
 sys.modules['tensorflow.keras'] = type('module', (), {'models': type('module', (), {'Model': object}), 'backend': None, 'callbacks': type('module', (), {'EarlyStopping': None, 'ModelCheckpoint': None})})
+sys.modules['tensorflow.keras.models'] = type('module', (), {'Model': object})
 
-# Import AGISystemSTEM from the core file
-# Since the filename has spaces and unicode, we use importlib
-import importlib.util
-spec = importlib.util.spec_from_file_location("core", "𝐎𝐧𝐞 𝐅. 𝐒𝐭𝐚𝐫𝐬𝐭𝐮𝐟𝐟")
+# Find the core file
+core_filename = [f for f in os.listdir('.') if f.startswith('𝐎𝐧𝐞')][0]
+core_path = os.path.abspath(core_filename)
+
+# Load the core module
+loader = SourceFileLoader("core", core_path)
+spec = importlib.util.spec_from_file_location("core", core_path, loader=loader)
 core = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(core)
 
 async def test_cache_and_eaip():
-    print("Testing AGISystemSTEM improvements...")
+    print(f"Testing AGISystemSTEM improvements using {core_filename}...")
 
     # Mock model loader
     def mock_loader(name, cls):
-        print(f"Loading model: {name}")
         return {"name": name}
 
     agi = core.AGISystemSTEM(model_loader=mock_loader)
@@ -36,10 +41,10 @@ async def test_cache_and_eaip():
     print("First load...")
     await agi.load_model("test_model", "nlp_v1")
 
-    print("Second load (should be cached)...")
-    # Capturing stdout/logs is hard here, but we can check if models dict has it
     if "nlp_v1" in agi.models:
         print("✓ Model loaded into memory.")
+    else:
+        print("✗ Model load failed.")
 
     # Check RCE nesting
     try:
