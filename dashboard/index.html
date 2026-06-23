@@ -3,9 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAIR Compliance Dashboard</title>
+    <title>AI Governance Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        :root {
+            --background: #0a0c10;
+            --foreground: #e6edf3;
+            --card: #0d1117;
+            --border: #30363d;
+            --primary: #58a6ff;
+            --status-ok: #3fb950;
+            --status-warn: #d29922;
+            --status-critical: #f85149;
+        }
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
 </head>
-<body>
-    <h1>FAIR Compliance Dashboard</h1>
+<body class="min-h-screen flex flex-col overflow-hidden">
+    <header class="border-b border-[--border] bg-card p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 border border-[--primary] rounded flex items-center justify-center">
+                <span class="text-xs font-mono font-bold text-[--primary]">AG</span>
+            </div>
+            <h1 class="text-lg font-mono font-bold tracking-tight">AI GOVERNANCE COMMAND CENTER</h1>
+        </div>
+        <div class="flex items-center gap-4 text-[10px] font-mono">
+            <span class="text-[--status-ok] bg-[--status-ok]/10 border border-[--status-ok]/30 px-2 py-1 rounded">ALL SYSTEMS OPERATIONAL</span>
+            <span class="text-muted-foreground border border-[--border] px-2 py-1 rounded">v2.5.0-enterprise</span>
+        </div>
+    </header>
+
+    <main class="flex-1 p-6 overflow-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <section class="bg-card border border-[--border] rounded p-4">
+                <div class="flex items-center gap-2 mb-4 border-b border-[--border] pb-2">
+                    <span class="w-1.5 h-4 bg-[--primary] rounded"></span>
+                    <h2 class="text-xs font-mono font-bold uppercase tracking-wider">Systemic Risk (G-SRI)</h2>
+                </div>
+                <div class="flex flex-col items-center justify-center py-4">
+                    <div class="text-4xl font-mono font-bold text-[--status-ok]">7.1</div>
+                    <div class="text-[10px] font-mono text-muted-foreground uppercase mt-2">Nominal Risk Level</div>
+                </div>
+            </section>
+
+            <section class="bg-card border border-[--border] rounded p-4">
+                <div class="flex items-center gap-2 mb-4 border-b border-[--border] pb-2">
+                    <span class="w-1.5 h-4 bg-[--status-warn] rounded"></span>
+                    <h2 class="text-xs font-mono font-bold uppercase tracking-wider">Compliance Status</h2>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center text-[11px] font-mono">
+                        <span class="text-muted-foreground uppercase">EU AI Act</span>
+                        <span class="font-bold text-[--primary]">84%</span>
+                    </div>
+                    <div class="w-full bg-[--border] h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-[--primary] h-full" style="width: 84%"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px] font-mono">
+                        <span class="text-muted-foreground uppercase">DORA</span>
+                        <span class="font-bold text-[--status-ok]">89%</span>
+                    </div>
+                    <div class="w-full bg-[--border] h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-[--status-ok] h-full" style="width: 89%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-card border border-[--border] rounded p-4">
+                <div class="flex items-center gap-2 mb-4 border-b border-[--border] pb-2">
+                    <span class="w-1.5 h-4 bg-[--status-critical] rounded"></span>
+                    <h2 class="text-xs font-mono font-bold uppercase tracking-wider">Critical Gaps</h2>
+                </div>
+                <div class="space-y-2">
+                    <div class="bg-[--status-critical]/10 border border-[--status-critical]/30 p-2 rounded flex items-start gap-2">
+                        <span class="text-[--status-critical] font-bold font-mono text-[10px]">!</span>
+                        <div class="text-[9px] font-mono">SGX firmware CVE-2025-1182 on HW-004</div>
+                    </div>
+                    <div class="bg-[--status-warn]/10 border border-[--status-warn]/30 p-2 rounded flex items-start gap-2">
+                        <span class="text-[--status-warn] font-bold font-mono text-[10px]">!</span>
+                        <div class="text-[9px] font-mono">Model card refresh overdue (17 days)</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="bg-card border border-[--border] rounded overflow-hidden">
+            <div class="bg-secondary/30 p-3 border-b border-[--border] flex items-center justify-between">
+                <h3 class="text-xs font-mono font-bold uppercase tracking-widest">WORM Audit Log (Real-time)</h3>
+                <span class="text-[8px] font-mono text-[--status-ok] animate-pulse">● LIVE STREAMING</span>
+            </div>
+            <div class="p-0 max-h-64 overflow-auto">
+                <table class="w-full text-[9px] font-mono">
+                    <thead class="sticky top-0 bg-card border-b border-[--border]">
+                        <tr>
+                            <th class="text-left p-2 text-muted-foreground font-normal">ID</th>
+                            <th class="text-left p-2 text-muted-foreground font-normal">ACTOR</th>
+                            <th class="text-left p-2 text-muted-foreground font-normal">ACTION</th>
+                            <th class="text-left p-2 text-muted-foreground font-normal">ZK-PROOF</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[--border]">
+                        <tr>
+                            <td class="p-2 text-muted-foreground">AUD-00001</td>
+                            <td class="p-2">AGT-001</td>
+                            <td class="p-2 text-[--primary]">CLASSIFY_RISK</td>
+                            <td class="p-2 text-[--status-ok]">VERIFIED</td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 text-muted-foreground">AUD-00002</td>
+                            <td class="p-2">pol-1</td>
+                            <td class="p-2 text-[--primary]">POLICY_ENFORCE</td>
+                            <td class="p-2 text-[--status-ok]">VERIFIED</td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 text-muted-foreground">AUD-00003</td>
+                            <td class="p-2 text-[--status-warn]">hw-attest-svc</td>
+                            <td class="p-2 text-[--primary]">TPM_MEASURE</td>
+                            <td class="p-2 text-[--status-warn]">PENDING</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-[--border] bg-card p-2 flex items-center justify-between text-[8px] font-mono text-muted-foreground uppercase tracking-widest">
+        <span>Omni-Sentinel AI Governance Engine</span>
+        <span>EAIP v2.5.0 Protocol Standard</span>
+        <span>© 2026 One Fine Starstuff</span>
+    </footer>
+    <script src="auth.js"></script>
+    <script src="dashboard.js"></script>
 </body>
 </html>
